@@ -30,6 +30,9 @@ namespace PatientManagement
 		
     #region Extensibility Method Definitions
     partial void OnCreated();
+    partial void InsertPatient(Patient instance);
+    partial void UpdatePatient(Patient instance);
+    partial void DeletePatient(Patient instance);
     #endregion
 		
 		public PatientManagementDataContext() : 
@@ -72,8 +75,10 @@ namespace PatientManagement
 	}
 	
 	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.Patient")]
-	public partial class Patient
+	public partial class Patient : INotifyPropertyChanging, INotifyPropertyChanged
 	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
 		
 		private int _Id;
 		
@@ -95,11 +100,38 @@ namespace PatientManagement
 		
 		private bool _IsDeleted;
 		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnIdChanging(int value);
+    partial void OnIdChanged();
+    partial void OnFirstNameChanging(string value);
+    partial void OnFirstNameChanged();
+    partial void OnLastNameChanging(string value);
+    partial void OnLastNameChanged();
+    partial void OnPhoneChanging(string value);
+    partial void OnPhoneChanged();
+    partial void OnEmailChanging(string value);
+    partial void OnEmailChanged();
+    partial void OnGenderChanging(string value);
+    partial void OnGenderChanged();
+    partial void OnNotesChanging(string value);
+    partial void OnNotesChanged();
+    partial void OnCreatedDateChanging(System.DateTime value);
+    partial void OnCreatedDateChanged();
+    partial void OnLastUpdatedDateChanging(System.DateTime value);
+    partial void OnLastUpdatedDateChanged();
+    partial void OnIsDeletedChanging(bool value);
+    partial void OnIsDeletedChanged();
+    #endregion
+		
 		public Patient()
 		{
+			OnCreated();
 		}
 		
-		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Id", DbType="Int NOT NULL")]
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_Id", DbType="Int NOT NULL", IsPrimaryKey=true, IsDbGenerated = true)]
 		public int Id
 		{
 			get
@@ -110,7 +142,11 @@ namespace PatientManagement
 			{
 				if ((this._Id != value))
 				{
+					this.OnIdChanging(value);
+					this.SendPropertyChanging();
 					this._Id = value;
+					this.SendPropertyChanged("Id");
+					this.OnIdChanged();
 				}
 			}
 		}
@@ -126,7 +162,11 @@ namespace PatientManagement
 			{
 				if ((this._FirstName != value))
 				{
+					this.OnFirstNameChanging(value);
+					this.SendPropertyChanging();
 					this._FirstName = value;
+					this.SendPropertyChanged("FirstName");
+					this.OnFirstNameChanged();
 				}
 			}
 		}
@@ -142,7 +182,11 @@ namespace PatientManagement
 			{
 				if ((this._LastName != value))
 				{
+					this.OnLastNameChanging(value);
+					this.SendPropertyChanging();
 					this._LastName = value;
+					this.SendPropertyChanged("LastName");
+					this.OnLastNameChanged();
 				}
 			}
 		}
@@ -158,7 +202,11 @@ namespace PatientManagement
 			{
 				if ((this._Phone != value))
 				{
+					this.OnPhoneChanging(value);
+					this.SendPropertyChanging();
 					this._Phone = value;
+					this.SendPropertyChanged("Phone");
+					this.OnPhoneChanged();
 				}
 			}
 		}
@@ -174,7 +222,11 @@ namespace PatientManagement
 			{
 				if ((this._Email != value))
 				{
+					this.OnEmailChanging(value);
+					this.SendPropertyChanging();
 					this._Email = value;
+					this.SendPropertyChanged("Email");
+					this.OnEmailChanged();
 				}
 			}
 		}
@@ -190,7 +242,11 @@ namespace PatientManagement
 			{
 				if ((this._Gender != value))
 				{
+					this.OnGenderChanging(value);
+					this.SendPropertyChanging();
 					this._Gender = value;
+					this.SendPropertyChanged("Gender");
+					this.OnGenderChanged();
 				}
 			}
 		}
@@ -206,7 +262,11 @@ namespace PatientManagement
 			{
 				if ((this._Notes != value))
 				{
+					this.OnNotesChanging(value);
+					this.SendPropertyChanging();
 					this._Notes = value;
+					this.SendPropertyChanged("Notes");
+					this.OnNotesChanged();
 				}
 			}
 		}
@@ -222,7 +282,11 @@ namespace PatientManagement
 			{
 				if ((this._CreatedDate != value))
 				{
+					this.OnCreatedDateChanging(value);
+					this.SendPropertyChanging();
 					this._CreatedDate = value;
+					this.SendPropertyChanged("CreatedDate");
+					this.OnCreatedDateChanged();
 				}
 			}
 		}
@@ -238,7 +302,11 @@ namespace PatientManagement
 			{
 				if ((this._LastUpdatedDate != value))
 				{
+					this.OnLastUpdatedDateChanging(value);
+					this.SendPropertyChanging();
 					this._LastUpdatedDate = value;
+					this.SendPropertyChanged("LastUpdatedDate");
+					this.OnLastUpdatedDateChanged();
 				}
 			}
 		}
@@ -254,8 +322,32 @@ namespace PatientManagement
 			{
 				if ((this._IsDeleted != value))
 				{
+					this.OnIsDeletedChanging(value);
+					this.SendPropertyChanging();
 					this._IsDeleted = value;
+					this.SendPropertyChanged("IsDeleted");
+					this.OnIsDeletedChanged();
 				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 			}
 		}
 	}

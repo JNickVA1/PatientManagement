@@ -22,33 +22,42 @@ namespace PatientManagement
 				// Read the connection string from the web config file.
 				GetConnectionString();
 
-				var aes = new AesManaged();
+				//var aes = new AesManaged();
 				//aes.KeySize = 128;
 				//var ks = aes.KeySize;
 				//var k = aes.Key;
+				//string kStr = Convert.ToBase64String(k);
+				//var v = aes.IV;
+				//var vStr = Convert.ToBase64String(v);
 
 				// Get the encryption key and vector.
 				GetEncryptionInfo();
 
 				// Create the DbContext.
 				CreateDbContext();
+			}
+			// Populate the ListView with the initial table data.
+			if (Session["DataContext"] is PatientManagementDataContext context)
+			{
+				// Retrieve the Patient rows of data from tha data context.
+				List<Patient> patientList = context.Patients.ToList();
 
-				// Populate the ListView with the initial table data.
-				if (Session["DataContext"] is PatientManagementDataContext context)
+				//
+				if (patientList.Count > 0)
 				{
-					// Retrieve the Patient rows of data from tha data context.
-					List<Patient> patientList = context.Patients.ToList();
+					byte[] keyBytes = Convert.FromBase64String(Session["CryptKey"].ToString());
+					byte[] vectorBytes = Convert.FromBase64String(Session["CryptVector"].ToString());
+					int keySize = Convert.ToInt32(Session["KeySize"]);
 
-					//
-					if (patientList.Count > 0)
+					// Decrypt the data.
+					foreach (var patient in patientList)
 					{
-						// Decrypt the data.
-
+						Crypto.Decrypt(patient, keyBytes, vectorBytes, keySize);
 					}
-					//
-					LVPatients.DataSource = patientList;
-					LVPatients.DataBind();
 				}
+				//
+				LVPatients.DataSource = patientList;
+				LVPatients.DataBind();
 			}
 		}
 
@@ -59,6 +68,8 @@ namespace PatientManagement
 			Session["CryptKey"] = keyStr;
 			var keyVec = ConfigurationManager.AppSettings["CryptVector"];
 			Session["CryptVector"] = keyVec;
+			var keySize = ConfigurationManager.AppSettings["KeySize"];
+			Session["KeySize"] = keySize;
 		}
 
 		private void CreateDbContext()
@@ -103,22 +114,27 @@ namespace PatientManagement
 			    (gender.Text.Trim().Length == 0) ||
 			    (notes.Text.Trim().Length == 0))
 			{
-				MessageLabel.Text =
-					"The system could not insert the item. All fields are required.";
+				//MessageLabel.Text =
+				//	"The system could not insert the item. All fields are required.";
 				e.Cancel = true;
 			}
 			// Encrypt the data.
-			byte[] keyBytes =
-				System.Text.Encoding.Unicode.GetBytes(Session["CryptKey"].ToString());
-			byte[] vectorBytes =
-				System.Text.Encoding.Unicode.GetBytes(Session["CryptVector"].ToString());
-			var newPatient = new Patient();
-			newPatient.FirstName = Crypto.Encrypt(firstName.Text.Trim(), keyBytes, vectorBytes);
-			newPatient.LastName = Crypto.Encrypt(lastName.Text.Trim(), keyBytes, vectorBytes);
-			newPatient.Phone = Crypto.Encrypt(phone.Text.Trim(), keyBytes, vectorBytes);
-			newPatient.Email = Crypto.Encrypt(email.Text.Trim(), keyBytes, vectorBytes);
-			newPatient.Gender = Crypto.Encrypt(gender.Text.Trim(), keyBytes, vectorBytes);
-			newPatient.Notes = Crypto.Encrypt(notes.Text.Trim(), keyBytes, vectorBytes);
+			byte[] keyBytes = Convert.FromBase64String(Session["CryptKey"].ToString());
+			byte[] vectorBytes = Convert.FromBase64String(Session["CryptVector"].ToString());
+			int keySize = Convert.ToInt32(Session["KeySize"]);
+
+			var newPatient = new Patient
+			{
+				FirstName = Crypto.Encrypt(firstName.Text.Trim(), keyBytes, vectorBytes, keySize),
+				LastName = Crypto.Encrypt(lastName.Text.Trim(), keyBytes, vectorBytes, keySize),
+				Phone = Crypto.Encrypt(phone.Text.Trim(), keyBytes, vectorBytes, keySize),
+				Email = Crypto.Encrypt(email.Text.Trim(), keyBytes, vectorBytes, keySize),
+				Gender = Crypto.Encrypt(gender.Text.Trim(), keyBytes, vectorBytes, keySize),
+				Notes = Crypto.Encrypt(notes.Text.Trim(), keyBytes, vectorBytes, keySize),
+				IsDeleted = false,
+				CreatedDate = DateTime.Now,
+				LastUpdatedDate = DateTime.Now
+			};
 
 			// Add the new Patient object to the Data Context Patient collection.
 			var context = Session["DataContext"] as PatientManagementDataContext;
