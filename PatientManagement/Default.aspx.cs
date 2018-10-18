@@ -23,8 +23,6 @@ namespace PatientManagement
 				GetConnectionString();
 
 				//var aes = new AesManaged();
-				//aes.KeySize = 128;
-				//var ks = aes.KeySize;
 				//var k = aes.Key;
 				//string kStr = Convert.ToBase64String(k);
 				//var v = aes.IV;
@@ -35,10 +33,19 @@ namespace PatientManagement
 
 				// Create the DbContext.
 				CreateDbContext();
+
+				ReadAndDecryptData();
 			}
-			// Populate the ListView with the initial table data.
+		}
+
+		private void ReadAndDecryptData()
+		{
+			// Populate the ListView with the table data.
 			if (Session["DataContext"] is PatientManagementDataContext context)
 			{
+				//
+				List<Patient> decryptedList = new List<Patient>();
+
 				// Retrieve the Patient rows of data from tha data context.
 				List<Patient> patientList = context.Patients.ToList();
 
@@ -47,16 +54,15 @@ namespace PatientManagement
 				{
 					byte[] keyBytes = Convert.FromBase64String(Session["CryptKey"].ToString());
 					byte[] vectorBytes = Convert.FromBase64String(Session["CryptVector"].ToString());
-					int keySize = Convert.ToInt32(Session["KeySize"]);
 
 					// Decrypt the data.
 					foreach (var patient in patientList)
 					{
-						Crypto.Decrypt(patient, keyBytes, vectorBytes, keySize);
+						decryptedList.Add(Crypto.Decrypt(patient, keyBytes, vectorBytes));
 					}
 				}
 				//
-				LVPatients.DataSource = patientList;
+				LVPatients.DataSource = decryptedList;
 				LVPatients.DataBind();
 			}
 		}
@@ -68,8 +74,6 @@ namespace PatientManagement
 			Session["CryptKey"] = keyStr;
 			var keyVec = ConfigurationManager.AppSettings["CryptVector"];
 			Session["CryptVector"] = keyVec;
-			var keySize = ConfigurationManager.AppSettings["KeySize"];
-			Session["KeySize"] = keySize;
 		}
 
 		private void CreateDbContext()
@@ -121,16 +125,18 @@ namespace PatientManagement
 			// Encrypt the data.
 			byte[] keyBytes = Convert.FromBase64String(Session["CryptKey"].ToString());
 			byte[] vectorBytes = Convert.FromBase64String(Session["CryptVector"].ToString());
-			int keySize = Convert.ToInt32(Session["KeySize"]);
+
+			// TEST
+			//Crypto.Main(firstName.Text.Trim());
 
 			var newPatient = new Patient
 			{
-				FirstName = Crypto.Encrypt(firstName.Text.Trim(), keyBytes, vectorBytes, keySize),
-				LastName = Crypto.Encrypt(lastName.Text.Trim(), keyBytes, vectorBytes, keySize),
-				Phone = Crypto.Encrypt(phone.Text.Trim(), keyBytes, vectorBytes, keySize),
-				Email = Crypto.Encrypt(email.Text.Trim(), keyBytes, vectorBytes, keySize),
-				Gender = Crypto.Encrypt(gender.Text.Trim(), keyBytes, vectorBytes, keySize),
-				Notes = Crypto.Encrypt(notes.Text.Trim(), keyBytes, vectorBytes, keySize),
+				FirstName = Crypto.Encrypt(firstName.Text.Trim(), keyBytes, vectorBytes),
+				LastName = Crypto.Encrypt(lastName.Text.Trim(), keyBytes, vectorBytes),
+				Phone = Crypto.Encrypt(phone.Text.Trim(), keyBytes, vectorBytes),
+				Email = Crypto.Encrypt(email.Text.Trim(), keyBytes, vectorBytes),
+				Gender = Crypto.Encrypt(gender.Text.Trim(), keyBytes, vectorBytes),
+				Notes = Crypto.Encrypt(notes.Text.Trim(), keyBytes, vectorBytes),
 				IsDeleted = false,
 				CreatedDate = DateTime.Now,
 				LastUpdatedDate = DateTime.Now
@@ -142,16 +148,28 @@ namespace PatientManagement
 
 			// Submit changes
 			context?.SubmitChanges();
+
+			//
+			//LVPatients.Items.Clear();
+
+			// Refresh the data source.
+			ReadAndDecryptData();
 		}
 
 		protected void LVPatients_OnItemDeleting(object sender, ListViewDeleteEventArgs e)
 		{
-			throw new NotImplementedException();
+			//
 		}
 
 		protected void LVPatients_OnItemEditing(object sender, ListViewEditEventArgs e)
 		{
-			throw new NotImplementedException();
+			//
+		}
+
+		protected void LVPatients_OnItemInserted(object sender, ListViewInsertedEventArgs e)
+		{
+
+			//
 		}
 	}
 }

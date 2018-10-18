@@ -20,6 +20,7 @@
 				DataKeyNames="ID"
 				InsertItemPosition="LastItem"
 				OnItemInserting="LVPatients_OnItemInserting"
+						  OnItemInserted="LVPatients_OnItemInserted"
 				OnItemDeleting="LVPatients_OnItemDeleting"
 				OnItemEditing="LVPatients_OnItemEditing">
 				<LayoutTemplate>
